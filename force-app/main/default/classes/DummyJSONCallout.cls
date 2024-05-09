@@ -19,6 +19,8 @@
  * 
  * For more detailed information on HTTP callouts in Apex, refer to the official Salesforce documentation: 
  * https://developer.salesforce.com/docs/atlas.en-us.apexref.meta/apexref/apex_classes_restful_http_httprequest.htm
+ * 
+ * Implemented by Oxana Suvorova
  */
 
 public with sharing class DummyJSONCallout {
@@ -34,18 +36,23 @@ public with sharing class DummyJSONCallout {
      * @param dummyUserId The ID of the user in the external system to fetch data for.
      */
 
+	@future(callout=true)
 	public static void getDummyJSONUserFromId(String dummyUserId) {
 		// Create HTTP request to send.
-
+		HttpRequest request = new HttpRequest();
 		// Set the endpoint URL. Use direct URL or for best practices use Named Credential.
-
+		request.setEndpoint('callout:DummyJsonUser' + '/' + dummyUserId);
 		// Set the HTTP method to GET.
-
+		request.setMethod('GET');
 		// Send the HTTP request and get the response.
-
+		Http http = new Http();
+		HttpResponse response = http.send(request);
 		// If the HTTP response code is successful, parse the JSON response and update the contact.
-		Contact cont = null;
-		upsert cont DummyJSON_Id__c; //insert/update from the JSON response using the external id (dummyUserId)
+		if (response.getStatusCode() == 200) {
+			Contact cont = createContactFromJson(response.getBody());
+			upsert cont DummyJSON_Id__c; // insert/update from the JSON response using the external id (dummyUserId)
+		}
+		
 	}
 
 	/* 
@@ -66,16 +73,26 @@ public with sharing class DummyJSONCallout {
 	@TestVisible // Allows test class to see this method. Since it is private, it would not be visible otherwise.
 	private static Contact createContactFromJson(String jsonResponse) {
 		// Deserialize the JSON string into map of primitive data types.
-
+		Map<String, Object> userDataMap = (Map<String, Object>) JSON.deserializeUntyped(jsonResponse);
 		// Create a new contact from the JSON response.
-
+		Contact cont = new Contact();
 		// Set the contact fields from the JSON response.
-
+		cont.FirstName = (String) userDataMap.get('firstName');
+		cont.LastName = (String) userDataMap.get('lastName');
+		cont.Email = (String) userDataMap.get('email');
+		cont.Phone = (String) userDataMap.get('phone');
+		cont.Birthdate = Date.valueOf((String) userDataMap.get('birthDate'));
+		cont.DummyJSON_Id__c = String.valueOf(userDataMap.get('id'));
 		// Deserialize the address from the JSON response.
-
+		Map<String, Object> addressMap = (Map<String, Object>) userDataMap.get('address');
 		// Set the address fields on the contact.
+		cont.MailingStreet = (String) addressMap.get('address');
+		cont.MailingCity = (String) addressMap.get('city');
+		cont.MailingPostalCode = (String) addressMap.get('postalCode');
+		cont.MailingState = (String) addressMap.get('state');
+		cont.MailingCountry = (String) addressMap.get('country');
 
-		return null;
+		return cont;
 	}
 
 	/* 
