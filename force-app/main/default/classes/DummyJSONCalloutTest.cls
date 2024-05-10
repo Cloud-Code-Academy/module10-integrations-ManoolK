@@ -129,7 +129,7 @@ public with sharing class DummyJSONCalloutTest {
 
 	@IsTest
 	static void testContactInsert() {
-		Contact cont = new Contact(FirstName = 'Test', LastName = 'User');
+		Contact cont = new Contact(FirstName = 'Test', LastName = 'User', DummyJSON_Id__c = '1');// Suvorova. Temporary correction
 
 		// Register the mock callout class
 		Test.setMock(HttpCalloutMock.class, new DummyJSONCalloutMockGenerator());
