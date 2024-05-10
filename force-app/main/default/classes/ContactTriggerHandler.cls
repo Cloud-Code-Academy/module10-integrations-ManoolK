@@ -30,13 +30,17 @@ public with sharing class ContactTriggerHandler extends TriggerHandler {
      * if DummyJSON_Id__c is less than or equal to 100, call the getDummyJSONUserFromId API
      */
     public override void beforeInsert() {
+        List<String> dummyJSONIdList = new List<String>();
         for (Contact cont : newConts) {
             if (cont.DummyJSON_Id__c == null) {
                 cont.DummyJSON_Id__c = String.valueOf(Math.round(Math.random() * 100));
             }
-            if (Integer.valueOf(cont.DummyJSON_Id__c) <= 100 && !System.isFuture()) {
-                DummyJSONCallout.getDummyJSONUserFromId(cont.DummyJSON_Id__c);
+            if (Integer.valueOf(cont.DummyJSON_Id__c) <= 100 && !System.isQueueable()) {
+                dummyJSONIdList.add(cont.DummyJSON_Id__c);
             }
+        }
+        if (dummyJSONIdList.size() > 0) {
+            System.enqueueJob(new GetDummyJSONUserQueueable(dummyJSONIdList));
         }
     }
 
@@ -45,14 +49,16 @@ public with sharing class ContactTriggerHandler extends TriggerHandler {
      * 
 	 * When a contact is updated
 	 * if DummyJSON_Id__c is greater than 100, call the postCreateDummyJSONUser API
-     * 
-     * Make it according to the description so it works. Bulkification after that.
      */
     public override void afterUpdate() {
+        List<String> contactIdList = new List<String>();
         for (Contact cont : newConts) {
-            if (Integer.valueOf(cont.DummyJSON_Id__c) > 100 && !System.isFuture()) {
-                DummyJSONCallout.postCreateDummyJSONUser(cont.Id);
+            if (Integer.valueOf(cont.DummyJSON_Id__c) > 100 && !System.isQueueable()) {
+                contactIdList.add(cont.Id);
             }
+        }
+        if (contactIdList.size() > 0) {
+            System.enqueueJob(new PostDummyJSONUserQueueable(contactIdList));
         }
     }
 }

@@ -36,7 +36,6 @@ public with sharing class DummyJSONCallout {
      * @param dummyUserId The ID of the user in the external system to fetch data for.
      */
 
-	@future(callout = true)
 	public static void getDummyJSONUserFromId(String dummyUserId) {
 		// Create HTTP request to send.
 		HttpRequest request = new HttpRequest();
@@ -109,7 +108,7 @@ public with sharing class DummyJSONCallout {
      * 
      * @param contactId The Salesforce Contact ID used to generate the JSON payload for the external system.
      */
-	@future(callout = true)
+
 	public static void postCreateDummyJSONUser(String contactId) {
 		// Create HTTP request to send.
 		HttpRequest request = new HttpRequest();
