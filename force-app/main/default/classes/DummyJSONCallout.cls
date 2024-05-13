@@ -35,7 +35,7 @@ public with sharing class DummyJSONCallout {
 	 * 
      * @param dummyUserId The ID of the user in the external system to fetch data for.
      */
-
+	@future(callout = true) 
 	public static void getDummyJSONUserFromId(String dummyUserId) {
 		// Create HTTP request to send.
 		HttpRequest request = new HttpRequest();
@@ -44,13 +44,16 @@ public with sharing class DummyJSONCallout {
 		// Set the HTTP method to GET.
 		request.setMethod('GET');
 		// Send the HTTP request and get the response.
-		Http http = new Http();
-		HttpResponse response = http.send(request);
-		// If the HTTP response code is successful, parse the JSON response and update the contact.
-		if (response.getStatusCode() == 200) {
-			Contact cont = createContactFromJson(response.getBody());
-			//cont.DummyJSON_Id__c = dummyUserId;
-			upsert cont DummyJSON_Id__c; // insert/update from the JSON response using the external id (dummyUserId)
+		try {
+			Http http = new Http();
+			HttpResponse response = http.send(request);
+			// If the HTTP response code is successful, parse the JSON response and update the contact.
+			if (response.getStatusCode() == 200) {
+				Contact cont = createContactFromJson(response.getBody());
+				upsert cont DummyJSON_Id__c; // insert/update from the JSON response using the external id (dummyUserId)
+			}
+		} catch (Exception ex) {
+			System.debug('Error: ' + ex.getMessage());
 		}
 	}
 
@@ -108,7 +111,7 @@ public with sharing class DummyJSONCallout {
      * 
      * @param contactId The Salesforce Contact ID used to generate the JSON payload for the external system.
      */
-
+	@future(callout = true)
 	public static void postCreateDummyJSONUser(String contactId) {
 		// Create HTTP request to send.
 		HttpRequest request = new HttpRequest();
