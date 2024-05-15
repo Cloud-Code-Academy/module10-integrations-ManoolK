@@ -66,13 +66,18 @@ public with sharing class DummyJSONCalloutTest {
 			Phone = '+123456789'
 		);
 		insert testContact;
+		// Suvorova
+		Map<Id, Contact> contsById = new Map<Id, Contact>();
+		contsById.put(testContact.Id, testContact);
 
 		// Set the mock callout class
 		Test.setMock(HttpCalloutMock.class, new DummyJSONCalloutMockGenerator());
 
 		// As this is a future method, we need to enclose it in Test.startTest() and Test.stopTest() to ensure it's executed in the test context.
 		Test.startTest();
-		DummyJSONCallout.postCreateDummyJSONUser(testContact.Id);
+		// Suvorova
+		// DummyJSONCallout.postCreateDummyJSONUser(testContact.Id);
+		System.enqueueJob(new PostDummyJSONUserQueueable(contsById));
 		Test.stopTest();
 
 		// Retrieve the updated contact to verify the changes
@@ -97,9 +102,15 @@ public with sharing class DummyJSONCalloutTest {
 			DummyJSON_Id__c = '101'
 		);
 		insert testContact;
+		// Suvorova
+		Set<Id> contactIds = new Set<Id>();
+		contactIds.add(testContact.Id);
 
 		// Call the method
-		String payload = DummyJSONCallout.generateDummyJsonUserPayload(testContact.Id);
+		// Suvorova
+		// String payload = DummyJSONCallout.generateDummyJsonUserPayload(testContact.Id);
+		Map<Id, String> payloadById = DummyJSONCallout.generateDummyJsonUserPayload(contactIds);
+		String payload = payloadById.get(testContact.Id);
 
 		// Parse the generated JSON
 		Map<String, Object> payloadMap = (Map<String, Object>) JSON.deserializeUntyped(payload);
