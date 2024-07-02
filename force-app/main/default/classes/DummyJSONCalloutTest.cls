@@ -102,15 +102,11 @@ public with sharing class DummyJSONCalloutTest {
 			DummyJSON_Id__c = '101'
 		);
 		insert testContact;
-		// Suvorova
-		Set<Id> contactIds = new Set<Id>();
-		contactIds.add(testContact.Id);
 
 		// Call the method
 		// Suvorova
 		// String payload = DummyJSONCallout.generateDummyJsonUserPayload(testContact.Id);
-		Map<Id, String> payloadById = DummyJSONCallout.generateDummyJsonUserPayload(contactIds);
-		String payload = payloadById.get(testContact.Id);
+		String payload = DummyJSONCallout.generateDummyJsonUserPayload(testContact);
 
 		// Parse the generated JSON
 		Map<String, Object> payloadMap = (Map<String, Object>) JSON.deserializeUntyped(payload);
