@@ -35,7 +35,7 @@ public with sharing class ContactTriggerHandler extends TriggerHandler {
             if (cont.DummyJSON_Id__c == null) {
                 cont.DummyJSON_Id__c = String.valueOf(Math.round(Math.random() * 100));
             }
-            if (Integer.valueOf(cont.DummyJSON_Id__c) <= 100 && !System.isFuture()) {
+            if (Integer.valueOf(cont.DummyJSON_Id__c) <= 100 && !System.isFuture() && !System.isQueueable()) {
                 DummyJSONCallout.getDummyJSONUserFromId(cont.DummyJSON_Id__c);
             }
         }
@@ -48,10 +48,15 @@ public with sharing class ContactTriggerHandler extends TriggerHandler {
 	 * if DummyJSON_Id__c is greater than 100, call the postCreateDummyJSONUser API
      */
     public override void afterUpdate() {
-        for (Contact cont : newConts) {
-            if (Integer.valueOf(cont.DummyJSON_Id__c) > 100 && !System.isFuture()) {
-                DummyJSONCallout.postCreateDummyJSONUser(cont.Id);
+        if (!System.isQueueable() && !System.isFuture()) {
+            Map<Id, Contact> contsById = new Map<Id, Contact>();
+            for (Contact cont : newConts) {
+                if (Integer.valueOf(cont.DummyJSON_Id__c) > 100) {
+                    // DummyJSONCallout.postCreateDummyJSONUser(cont.Id);
+                    contsById.put(cont.Id, cont);
+                }
             }
+            System.enqueueJob(new PostDummyJSONUserQueueable(contsById));
         }
     }
 }
